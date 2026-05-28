@@ -2,37 +2,33 @@
 #include <windows.h>
 #include <winnt.h>
 #include <winternl.h>
-#include "GLOBALS.h"
 #include <vector>
+#include "GLOBALS.h"
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
-
-
-
-
-
-class PEIMAGE
-{
-
+class PEIMAGE {
 public:
-	
-	PARAMS Params = {};
-	PEIMAGE(const std::vector<BYTE> &content);
-	~PEIMAGE();
-	
-	bool AllocateMemory(const std::vector<BYTE>& content);
-	void CopySectionHeaders(const std::vector<BYTE>& content);
-	bool ApplyRelocations();
-	bool FixImports();
-	bool RegisterExeptionHandlers();
-	bool AssignPagePerms();
-	bool ProcessTLSCallbacks();
-	bool RunCRTInitializers();
-	void JumpToEntry();
-	/// DEBUG
-	bool is_dll = false;
-	bool is_64bit = false;
-};
+    PARAMS Params = {};
+    bool   is_dll    = false;
+    bool   is_64bit  = false;  
+    bool   is_valid  = false;   
 
+    explicit PEIMAGE(const std::vector<BYTE>& content);
+    ~PEIMAGE();
+
+    bool AllocateMemory(const std::vector<BYTE>& content);
+    void CopySectionHeaders(const std::vector<BYTE>& content);
+    bool ApplyRelocations();
+    bool FixImports();
+    bool RegisterExceptionHandlers();
+    bool AssignPagePerms();
+    bool ProcessTLSCallbacks();
+    void JumpToEntry();
+
+private:
+    PIMAGE_OPTIONAL_HEADER32 opt32() const {
+        return &reinterpret_cast<PIMAGE_NT_HEADERS32>(Params.nt_headers)->OptionalHeader;
+    }
+    PIMAGE_OPTIONAL_HEADER64 opt64() const {
+        return &reinterpret_cast<PIMAGE_NT_HEADERS64>(Params.nt_headers)->OptionalHeader;
+    }
+};
